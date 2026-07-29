@@ -293,8 +293,8 @@
                 }, 300);
 
             } catch (err) {
-                console.error(err);
-                errDiv.innerText = "Errore di connessione durante la verifica. Riprova.";
+                console.error("ERRORE DETTAGLIATO:", err);
+                errDiv.innerHTML = `<b>Errore tecnico:</b> ${err.message}`;
                 errDiv.classList.remove('hidden');
                 btn.innerText = "Accedi alla Dashboard";
                 btn.disabled = false;
