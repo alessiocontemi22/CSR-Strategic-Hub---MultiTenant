@@ -15,14 +15,15 @@
         import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, deleteDoc, updateDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+        // NUOVA CONFIGURAZIONE FIREBASE MULTI-TENANT
         const firebaseConfig = {
-            apiKey: "AIzaSyCKOE0-h2wqbctI8lbGCsHm6aMODGF5OwA",
-            authDomain: "dashboard-def-a34c5.firebaseapp.com",
-            projectId: "dashboard-def-a34c5",
-            storageBucket: "dashboard-def-a34c5.firebasestorage.app",
-            messagingSenderId: "839035532169",
-            appId: "1:839035532169:web:2557fcbc20ea0454b12758",
-            measurementId: "G-066RK8GSQ1"
+            apiKey: "AIzaSyCAy7Ep-3myWymnfsQf-q5V5VgpvvUdg6s",
+            authDomain: "csr-strategic-hub-multi-tenant.firebaseapp.com",
+            projectId: "csr-strategic-hub-multi-tenant",
+            storageBucket: "csr-strategic-hub-multi-tenant.firebasestorage.app",
+            messagingSenderId: "107718521723",
+            appId: "1:107718521723:web:feb6fd55c42b0daa1403de",
+            measurementId: "G-TP10478EBS"
         };
 
         const app = initializeApp(firebaseConfig);
