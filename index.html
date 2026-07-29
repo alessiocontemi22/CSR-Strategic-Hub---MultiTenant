@@ -243,28 +243,30 @@
 
             const btn = document.getElementById('login-btn');
             const errDiv = document.getElementById('login-error');
-            btn.innerText = "Verifica Ordine Shopify...";
+            btn.innerText = "Verifica in corso...";
             btn.disabled = true;
             errDiv.classList.add('hidden');
 
             try {
-                const ordersRef = collection(db, 'shopify_orders');
-                const q = query(ordersRef, where('email', '==', orderEmail), where('status', '==', 'active'));
-                const querySnapshot = await getDocs(q);
-
                 let companyName = "";
                 let companyId = "";
 
-                if (!querySnapshot.empty) {
-                    const orderData = querySnapshot.docs[0].data();
-                    companyName = orderData.company_name || orderData.customer_name || "Azienda Partner";
-                    companyId = querySnapshot.docs[0].id;
+                // Controllo se email di test/admin
+                if (orderEmail.includes('demo') || orderEmail.includes('admin') || orderEmail === 'alessio@contemi.it') {
+                    companyName = "Contemi Sustainable Corp";
+                    companyId = "demo_company_id_123";
                 } else {
-                    if (orderEmail.includes('demo') || orderEmail.includes('admin') || orderEmail === 'alessio@contemi.it') {
-                        companyName = "Contemi Sustainable Corp";
-                        companyId = "demo_company_id_123";
+                    // Controllo ordini su Firestore
+                    const ordersRef = collection(db, 'shopify_orders');
+                    const q = query(ordersRef, where('email', '==', orderEmail), where('status', '==', 'active'));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const orderData = querySnapshot.docs[0].data();
+                        companyName = orderData.company_name || orderData.customer_name || "Azienda Partner";
+                        companyId = querySnapshot.docs[0].id;
                     } else {
-                        errDiv.innerHTML = `Nessun abbonamento attivo trovato per <b>${orderEmail}</b>.<br>Completa prima l'acquisto sul nostro store Shopify.`;
+                        errDiv.innerHTML = `Nessun abbonamento attivo trovato per <b>${orderEmail}</b>.<br>Verifica l'email o contatta il supporto.`;
                         errDiv.classList.remove('hidden');
                         btn.innerText = "Accedi alla Dashboard";
                         btn.disabled = false;
@@ -279,9 +281,16 @@
                     companyId: companyId
                 };
                 
+                // Salvataggio profilo
                 localStorage.setItem('csr_user_profile', JSON.stringify(userProfile));
+
+                // Eseguiamo il login anonimo attendendo la risposta del server prima di ricaricare
                 await signInAnonymously(auth);
-                location.reload();
+
+                // Piccolo ritardo di sicurezza per stabilizzare la sessione prima del reload
+                setTimeout(() => {
+                    location.reload();
+                }, 300);
 
             } catch (err) {
                 console.error(err);
