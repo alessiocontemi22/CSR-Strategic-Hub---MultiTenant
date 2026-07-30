@@ -15,7 +15,6 @@
         import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, deleteDoc, updateDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // NUOVA CONFIGURAZIONE FIREBASE MULTI-TENANT
         const firebaseConfig = {
             apiKey: "AIzaSyCAy7Ep-3myWymnfsQf-q5V5VgpvvUdg6s",
             authDomain: "csr-strategic-hub-multi-tenant.firebaseapp.com",
@@ -71,7 +70,11 @@
         };
 
         window.handleLogout = async () => {
-            await signOut(auth);
+            try {
+                await signOut(auth);
+            } catch (e) {
+                console.error(e);
+            }
             localStorage.removeItem('csr_user_profile');
             location.reload();
         };
@@ -145,7 +148,7 @@
             document.body.removeChild(link);
         };
 
-       window.downloadPDF = async () => {
+        window.downloadPDF = async () => {
             const element = document.getElementById('report-container');
             if (!element) return;
             
@@ -164,7 +167,17 @@
                 alert("Impossibile generare il PDF. Riprova tra qualche istante.");
             }
         };
-            
+
+        function updateUI() {
+            const totals = {};
+            initiatives.forEach(item => {
+                const kpiKey = item.kpi_KPI.toUpperCase();
+                if (!totals[kpiKey]) {
+                    totals[kpiKey] = { val: 0, cat: item.categoria };
+                }
+                totals[kpiKey].val += item.kpi_valore;
+            });
+
             document.getElementById('impact-highlights').innerHTML = Object.entries(totals).slice(0, 3).map(([unit, data]) => `
                 <div class="impact-card bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Impact KPI</p>
@@ -197,7 +210,7 @@
                 </tr>`).join('');
 
             const sorted = initiatives.filter(i => i.last_updated).sort((a,b) => b.last_updated?.seconds - a.last_updated?.seconds);
-            if (sorted.length > 0) {
+            if (sorted.length > 0 && sorted[0].last_updated) {
                 const last = sorted[0].last_updated.toDate();
                 document.getElementById('footer-info').innerHTML = `ULTIMO AGGIORNAMENTO: <b>${last.toLocaleDateString()} ${last.toLocaleTimeString()}</b> | OPERATORE: <b>${sorted[0].autore.toUpperCase()}</b> | AZIENDA: <b>${userProfile.companyName.toUpperCase()}</b>`;
             } else {
@@ -263,12 +276,10 @@
                 let companyName = "";
                 let companyId = "";
 
-                // 1. Controllo email di test / admin
                 if (orderEmail.includes('demo') || orderEmail.includes('admin') || orderEmail === 'alessio@contemi.it') {
                     companyName = "Contemi Sustainable Corp";
                     companyId = "demo_company_id_123";
                 } else {
-                    // 2. Controllo ordini su Firestore
                     const ordersRef = collection(db, 'shopify_orders');
                     const q = query(ordersRef, where('email', '==', orderEmail), where('status', '==', 'active'));
                     const querySnapshot = await getDocs(q);
@@ -286,7 +297,6 @@
                     }
                 }
 
-                // Salvataggio del profilo utente
                 userProfile = { 
                     name: operatorName, 
                     email: orderEmail,
@@ -296,7 +306,12 @@
                 
                 localStorage.setItem('csr_user_profile', JSON.stringify(userProfile));
 
-                // Ricarica immediata per entrare nella dashboard senza passare per Auth di Firebase
+                try {
+                    await signInAnonymously(auth);
+                } catch (authErr) {
+                    console.warn("Auth anonima non attiva o non necessaria:", authErr);
+                }
+
                 location.reload();
 
             } catch (err) {
