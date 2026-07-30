@@ -263,12 +263,12 @@
                 let companyName = "";
                 let companyId = "";
 
-                // Controllo se email di test/admin
+                // 1. Controllo email di test / admin
                 if (orderEmail.includes('demo') || orderEmail.includes('admin') || orderEmail === 'alessio@contemi.it') {
                     companyName = "Contemi Sustainable Corp";
                     companyId = "demo_company_id_123";
                 } else {
-                    // Controllo ordini su Firestore
+                    // 2. Controllo ordini su Firestore
                     const ordersRef = collection(db, 'shopify_orders');
                     const q = query(ordersRef, where('email', '==', orderEmail), where('status', '==', 'active'));
                     const querySnapshot = await getDocs(q);
@@ -286,6 +286,7 @@
                     }
                 }
 
+                // Salvataggio del profilo utente
                 userProfile = { 
                     name: operatorName, 
                     email: orderEmail,
@@ -293,20 +294,14 @@
                     companyId: companyId
                 };
                 
-                // Salvataggio profilo
                 localStorage.setItem('csr_user_profile', JSON.stringify(userProfile));
 
-                // Eseguiamo il login anonimo attendendo la risposta del server prima di ricaricare
-                await signInAnonymously(auth);
-
-                // Piccolo ritardo di sicurezza per stabilizzare la sessione prima del reload
-                setTimeout(() => {
-                    location.reload();
-                }, 300);
+                // Ricarica immediata per entrare nella dashboard senza passare per Auth di Firebase
+                location.reload();
 
             } catch (err) {
                 console.error("ERRORE DETTAGLIATO:", err);
-                errDiv.innerHTML = `<b>Errore tecnico:</b> ${err.message}`;
+                errDiv.innerHTML = `<b>Errore di connessione:</b> ${err.message}`;
                 errDiv.classList.remove('hidden');
                 btn.innerText = "Accedi alla Dashboard";
                 btn.disabled = false;
